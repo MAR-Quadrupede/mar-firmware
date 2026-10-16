@@ -171,12 +171,54 @@ void parseSerialCommand(String cmd) {
     return;
   }
 
+  // --- Supporto Comandi Diretti Robot Quadrupede (AVANTI, STOP, STOP_TERRA, GIRA_DX, GIRA_SX) ---
+  if (cmd.equalsIgnoreCase("AVANTI")) {
+    moveForward(currentSpeed);
+    return;
+  }
+  else if (cmd.equalsIgnoreCase("STOP")) {
+    stopMotors();
+    return;
+  }
+  else if (cmd.equalsIgnoreCase("STOP_TERRA")) {
+    stopMotors();
+    Serial.println("TLM:ALERT=GROUND_OBSTACLE");
+    return;
+  }
+  else if (cmd.equalsIgnoreCase("GIRA_DX")) {
+    turnRight(currentSpeed);
+    return;
+  }
+  else if (cmd.equalsIgnoreCase("GIRA_SX")) {
+    turnLeft(currentSpeed);
+    return;
+  }
+
+  // --- Supporto Modifica Periodo di Trotto Float (es. 1.20, 2.50) ---
+  char firstC = cmd.charAt(0);
+  if ((firstC >= '0' && firstC <= '9') || firstC == '.') {
+    float periodSec = cmd.toFloat();
+    if (periodSec > 0.1 && periodSec < 10.0) {
+      // Periodo breve = trotto veloce (PWM alto), periodo lungo = trotto lento (PWM basso)
+      currentSpeed = constrain(map(long(periodSec * 100), 100, 300, 240, 100), 80, 255);
+      Serial.print("TLM:GAIT_PERIOD=");
+      Serial.print(periodSec, 2);
+      Serial.print("s,PWM=");
+      Serial.println(currentSpeed);
+      return;
+    }
+  }
+
   // --- Supporto Protocollo Strutturato M.A.R. (CMD:...) ---
   if (cmd.startsWith("CMD:")) {
     String payload = cmd.substring(4);
     payload.trim();
 
-    if (payload.startsWith("STOP")) {
+    if (payload.startsWith("STOP_TERRA")) {
+      stopMotors();
+      Serial.println("TLM:ALERT=GROUND_OBSTACLE");
+    }
+    else if (payload.startsWith("STOP")) {
       stopMotors();
     }
     else if (payload.startsWith("FORWARD")) {
@@ -215,7 +257,7 @@ void parseSerialCommand(String cmd) {
       }
       turnRight(speed);
     }
-    else if (payload.startsWith("STATUS")) {
+    else if (payload.startsWith("STATUS") || payload.startsWith("PING")) {
       Serial.print("TLM:STATUS=OK,US=");
       Serial.println(lastDistanceCm);
     }

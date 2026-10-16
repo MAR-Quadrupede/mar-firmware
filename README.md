@@ -1,11 +1,11 @@
-# 🦾 Microservizio: `mar-firmware`
+# Microservizio: `mar-firmware`
 
 **Sottosistema di Controllo Basso Livello & Attuazione Fisica (Microcontrollore)**  
 *Parte dell'architettura a microservizi M.A.R. (Multi-legged Autonomous Robot)*
 
 ---
 
-## 🎯 Ruolo nell'Architettura a Microservizi
+## Ruolo nell'Architettura a Microservizi
 
 Nell'architettura distribuita di **M.A.R.**, il componente `mar-firmware` è l'unico microservizio che gira su hardware microcontrollore dedicato (Arduino Mega 2560, Arduino GIGA o RP2040) ed è separato computazionalmente dal Raspberry Pi 5.
 
@@ -23,27 +23,30 @@ I suoi compiti principali sono:
 
 ---
 
-## 🔌 Interfaccia di Comunicazione Seriale
+## Interfaccia di Comunicazione Seriale
 
-Il firmware comunica esclusivamente con il microservizio `mar-serial-bridge` tramite connessione seriale USB (115200 baud, 8N1).
+Il firmware comunica con il microservizio `mar-serial-bridge` tramite connessione seriale USB (115200 baud, 8N1).
 
 ### Comandi in Ingresso (Downlink da `mar-serial-bridge`)
-* `CMD:STOP\n`: Arresto immediato motori e stabilizzazione.
-* `CMD:FORWARD,<velocità_0_100>\n`: Avanzamento con andatura impostata.
+* `AVANTI\n` o `CMD:FORWARD,<velocità_0_100>\n`: Avanzamento con andatura impostata.
+* `STOP\n` o `CMD:STOP\n`: Arresto immediato motori e stabilizzazione.
+* `STOP_TERRA\n` o `CMD:STOP_TERRA\n`: Arresto e segnalazione dislivello/ostacolo basso a terra.
+* `GIRA_DX\n` o `CMD:TURN_R,<gradi_o_vel>\n`: Rotazione sul posto a destra.
+* `GIRA_SX\n` o `CMD:TURN_L,<gradi_o_vel>\n`: Rotazione sul posto a sinistra.
 * `CMD:BACKWARD,<velocità_0_100>\n`: Retromarcia.
-* `CMD:TURN_L,<gradi_o_vel>\n`: Rotazione sul posto a sinistra.
-* `CMD:TURN_R,<gradi_o_vel>\n`: Rotazione sul posto a destra.
 * `CMD:STAND,<altezza_mm>\n`: Assetto eretto all'altezza desiderata.
 * `CMD:SIT\n`: Modalità di riposo a terra.
-* `CMD:HIP_WIDTH,<angolo_deg>\n`: Regolazione apertura servomotori dell'anca.
-* `CMD:PING\n`: Heartbeat periodico per azzerare il watchdog.
+* `<periodo_float>\n` (es. `1.20`, `2.50`): Impostazione tempo di ciclo del passo (andatura trotto).
+* `CMD:PING\n`: Heartbeat periodico per azzerare il watchdog di sicurezza.
 
 ### Telemetria in Uscita (Uplink verso `mar-serial-bridge`)
 * `TLM:STATUS=<OK|WARN|FAULT>,BATT=<volts>,CURR=<amps>,PITCH=<deg>,ROLL=<deg>\n`
+* `TLM:ALERT=GROUND_OBSTACLE\n`: Notifica trigger ostacolo a terra.
+* `TLM:GAIT_PERIOD=<sec>s,PWM=<val>\n`: Conferma regolazione dinamica andatura.
 
 ---
 
-## 📂 Struttura della Cartella
+## Struttura del Repository
 
 ```text
 mar-firmware/
@@ -56,7 +59,7 @@ mar-firmware/
 
 ---
 
-## 🚀 Compilazione e Caricamento
+## Compilazione e Caricamento
 
 ### Opzione 1: PlatformIO (Consigliata)
 ```bash

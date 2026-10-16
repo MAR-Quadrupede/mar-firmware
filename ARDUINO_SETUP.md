@@ -1,10 +1,10 @@
-# 🔌 Configurazione Hardware e Firmware Arduino — M.A.R.
+# Configurazione Hardware e Firmware Arduino — M.A.R.
 
 Guida per il collegamento hardware tra la scheda **Arduino (Mega / Uno / Nano)**, il driver motori **L298N**, il sensore ad ultrasuoni **HC-SR04** e il canale seriale USB con il **Raspberry Pi 5**.
 
 ---
 
-## 📌 Schema Cablaggio Pin
+## Schema Cablaggio Pin
 
 ### 1. Driver Motori DC (L298N)
 
@@ -31,34 +31,36 @@ Il firmware supporta sia la modalità a **singolo pin** (TRIGGER ed ECHO pontice
 
 ---
 
-## 💻 Caricamento del Firmware
+## Caricamento del Firmware
 
 1. Collega la scheda Arduino al computer via cavo USB.
 2. Apri l'Arduino IDE.
 3. Seleziona la tua scheda: `Tools -> Board -> Arduino Mega 2560` (o Uno/Nano).
 4. Seleziona la porta seriale corretta (`/dev/cu.usbmodem*` su macOS o `/dev/ttyACM*` su Linux).
 5. Apri lo sketch:
-   [`firmware/mar_stereovision_controller/mar_stereovision_controller.ino`](file:///Users/gianluca/Desktop/m.a.r./stereovisione/firmware/mar_stereovision_controller/mar_stereovision_controller.ino).
+   [`mar_stereovision_controller/mar_stereovision_controller.ino`](mar_stereovision_controller/mar_stereovision_controller.ino).
 6. Clicca su **Carica (Upload)**.
 
 ---
 
-## 📡 Protocollo di Comunicazione Seriale
+## Protocollo di Comunicazione Seriale
 
 La comunicazione avviene a **9600** o **115200** baud delimitata da caratteri di ritorno a capo (`\n`).
 
-### Comandi Downlink (RPi 5 ➔ Arduino)
+### Comandi Downlink (RPi 5 -> Arduino)
 
 | Comando M.A.R. | Comando Legacy | Azione |
 | :--- | :---: | :--- |
-| `CMD:STOP` | `S` | Arresto immediato e spegnimento uscite PWM motori |
-| `CMD:FORWARD,<0-100>` | `F` | Marcia avanti alla velocità percentuale specificata |
+| `CMD:STOP` / `STOP` | `S` | Arresto immediato e spegnimento uscite PWM motori |
+| `CMD:STOP_TERRA` / `STOP_TERRA` | - | Arresto per ostacolo a terra / dislivello |
+| `CMD:FORWARD,<0-100>` / `AVANTI` | `F` | Marcia avanti alla velocità percentuale specificata |
 | `CMD:BACKWARD,<0-100>` | `B` | Retromarcia alla velocità percentuale specificata |
-| `CMD:TURN_L,<0-100>` | `L` | Rotazione sul posto verso sinistra |
-| `CMD:TURN_R,<0-100>` | `R` | Rotazione sul posto verso destra |
+| `CMD:TURN_L,<0-100>` / `GIRA_SX` | `L` | Rotazione sul posto verso sinistra |
+| `CMD:TURN_R,<0-100>` / `GIRA_DX` | `R` | Rotazione sul posto verso destra |
+| `<periodo_float>` (es. `1.20`) | - | Regolazione tempo passo trotto |
 | `CMD:STATUS` | `?` | Richiesta telemetria immediata |
 
-### Telemetria Uplink (Arduino ➔ RPi 5)
+### Telemetria Uplink (Arduino -> RPi 5)
 
 Ad ogni ciclo di campionamento (10-15 Hz), Arduino trasmette sulla seriale:
 ```text
@@ -73,7 +75,7 @@ EMERGENCY_STOP:14.2cm
 
 ---
 
-## 🛡️ Meccanismi di Sicurezza Hardware Integrati
+## Meccanismi di Sicurezza Hardware Integrati
 
 1. **Watchdog Heartbeat (1000 ms)**:
    Se per oltre 1 secondo Arduino non riceve alcun comando dalla seriale (crash di Python, cavo USB disconnesso o blocco del software), il firmware entra autonomamente in arresto e azzera le uscite PWM dei motori.
